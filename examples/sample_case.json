@@ -1,0 +1,15 @@
+{
+  "case_id": "C-1",
+  "decision_owner": "records-office",
+  "required_evidence_ids": [
+    "E1"
+  ],
+  "evidence": [
+    {
+      "id": "E1",
+      "verified": false,
+      "provenance": "official-copy"
+    }
+  ],
+  "expected_status": "WAITING_EVIDENCE"
+}
