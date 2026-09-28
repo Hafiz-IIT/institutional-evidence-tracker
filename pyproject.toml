@@ -1,0 +1,14 @@
+[build-system]
+requires=["setuptools>=68"]
+build-backend="setuptools.build_meta"
+
+[project]
+name="institutional-evidence-tracker"
+version="0.1.0"
+description="Evidence/dependency tracker for multi-step institutional processes: provenance, decision owner, blocking dependencies, next action and audit."
+requires-python=">=3.10"
+license={text="MIT"}
+authors=[{name="Syed Hafiz Ali"}]
+
+[tool.setuptools]
+py-modules=["institutional_evidence_tracker"]
