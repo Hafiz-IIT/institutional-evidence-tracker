@@ -43,3 +43,7 @@ Tests verify owner requirements, dependency blocking, verified-evidence readines
 
 ## License
 MIT.
+
+## Extended implementation
+
+- `evidence_packet.py` exports a deterministic evidence/dependency packet with a SHA-256 content fingerprint.
