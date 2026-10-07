@@ -1,49 +1,55 @@
 # Institutional Evidence Tracker
 
-> Evidence/dependency tracker for multi-step institutional processes: provenance, decision owner, blocking dependencies, next action and audit.
+<p align="center"><strong>Evidence Before Institutional Decision</strong><br/><sub>Track required evidence, verification, dependencies and accountable next actions.</sub></p>
 
-## Status
-**Reproducible prototype** with executable Python, tests, CI, architecture, evaluation and roadmap documentation.
+<p align="center"><img src="https://img.shields.io/badge/status-reproducible%20prototype-blue" alt="Prototype"/> <img src="https://img.shields.io/badge/focus-evidence%20governance-orange" alt="Evidence governance"/></p>
 
-## Problem
-Administrative and institutional cases often stall because the current decision owner, unresolved dependency, or missing verified evidence is unclear. The tracker makes those dependencies explicit.
+## Question
 
-## Architecture
-Case → decision owner → required evidence IDs → provenance/verification state → blocking dependencies → WAITING_OWNER / BLOCKED / WAITING_EVIDENCE / READY / COMPLETE → next action + audit.
+**How can an institutional workflow make it obvious what evidence exists, what remains unverified, and who owns the next decision?**
 
-## Run
-```bash
-python -m unittest discover -s tests -v
-python institutional_evidence_tracker.py
+```
+Case
+ ↓
+Required evidence
+ ↓
+Evidence + provenance
+ ↓
+Verification
+ ↓
+Blocking dependencies
+ ↓
+Status + accountable next action
 ```
 
+## Try it
+
+```bash
+python institutional_evidence_tracker.py
+python -m unittest discover -s tests -v
+```
+
+`evidence_packet.py` exports a deterministic, hash-fingerprinted evidence packet containing evidence state, dependencies, status, next action and audit history.
+
 ## Implemented
-- Decision-owner field
-- Required evidence registry
-- Evidence provenance and verification
-- Blocking dependencies
-- Status state machine
-- Next-action calculation
-- Audit trail
-- Tests and CI
 
-## Research lineage
-- *The Future of Digital Trust: Secure Data Interactions in User-Centric Platforms*
-- *Human-Centered AI Design for Inclusive Digital Platforms*
-- *Ethical and Legal Dimensions of Autonomous Systems*
+- institutional case state
+- required-evidence tracking
+- provenance
+- verification state
+- blocking dependencies
+- accountable decision owner
+- audit history
+- deterministic evidence packet
+- SHA-256 packet fingerprint
+- deterministic CI
 
-## Evaluation
-Tests verify owner requirements, dependency blocking, verified-evidence readiness and terminal completion.
+## Why it matters
 
-## Limitations
-- Generic workflow model
-- Not a legal-advice engine
-- No institution integration
-- No document-signature verification yet
+This repository extends the portfolio's central idea beyond AI agents: **important decisions should expose their evidence state rather than hiding uncertainty behind a polished interface.**
 
-## License
-MIT.
+Related: [Agent Evidence Probes](https://github.com/Hafiz-IIT/agent-evidence-probes) · [Agency QA Orchestrator](https://github.com/Hafiz-IIT/agency-qa-orchestrator) · [~haf.s__ OS Core](https://github.com/Hafiz-IIT/hafs-os-core)
 
-## Extended implementation
+## Boundary
 
-- `evidence_packet.py` exports a deterministic evidence/dependency packet with a SHA-256 content fingerprint.
+Prototype institutional workflow infrastructure. It does not claim deployment inside a government, university, hospital or other institution.
