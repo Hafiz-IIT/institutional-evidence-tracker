@@ -16,7 +16,7 @@ class EvidencePacketTests(unittest.TestCase):
         case = InstitutionalCase("C", decision_owner="office", required_evidence_ids={"E1"})
         case.add_evidence(Evidence("E1", "record", "official"))
         before = build_packet(case)["sha256"]
-        case.verify_evidence("E1")
+        case.verify_evidence("E1", verifier="records-office")
         after = build_packet(case)["sha256"]
         self.assertNotEqual(before, after)
 
