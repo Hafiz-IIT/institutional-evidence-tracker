@@ -13,6 +13,7 @@ def build_packet(case: InstitutionalCase) -> dict:
             "description": item.description,
             "provenance": item.provenance,
             "verified": item.verified,
+            "verified_by": item.verified_by,
         }
         for item in sorted(case.evidence.values(), key=lambda item: item.evidence_id)
     ]
