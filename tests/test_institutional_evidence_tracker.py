@@ -8,22 +8,122 @@ class InstitutionalTrackerTests(unittest.TestCase):
         case = InstitutionalCase("C")
         self.assertEqual(case.status(), Status.WAITING_OWNER)
 
-    def test_dependency_blocks(self):
-        case = InstitutionalCase("C", decision_owner="office", blocking_dependencies={"inspection"})
+    def test_dependency_blocks_until_authorized_resolver(self):
+        case = InstitutionalCase("C", decision_owner="office",
+                                 blocking_dependencies={"inspection"},
+                                 authorized_dependency_resolvers={"inspector"})
         self.assertEqual(case.status(), Status.BLOCKED)
         self.assertIn("inspection", case.next_action())
-
-    def test_verified_evidence_makes_case_ready(self):
-        case = InstitutionalCase("C", decision_owner="office", required_evidence_ids={"E1"})
-        case.add_evidence(Evidence("E1", "record", "official"))
-        self.assertEqual(case.status(), Status.WAITING_EVIDENCE)
-        case.verify_evidence("E1")
+        with self.assertRaises(PermissionError):
+            case.resolve_dependency("inspection", resolver="random-user")
+        case.resolve_dependency("inspection", resolver="inspector")
         self.assertEqual(case.status(), Status.READY)
 
-    def test_complete_state(self):
+    def test_verified_evidence_makes_case_ready(self):
+        case = InstitutionalCase("C", decision_owner="office",
+                                 required_evidence_ids={"E1"},
+                                 authorized_verifiers={"records-office"})
+        case.add_evidence(Evidence("E1", "record", "official", submitted_by="submitter"))
+        self.assertEqual(case.status(), Status.WAITING_EVIDENCE)
+        case.verify_evidence("E1", verifier="records-office")
+        self.assertEqual(case.status(), Status.READY)
+
+    def test_constructor_rejects_preverified_evidence_injection(self):
+        injected = Evidence(
+            "E1", "record", "user-supplied",
+            submitted_by="submitter", verified=True, verified_by="forged-verifier",
+        )
+        with self.assertRaisesRegex(ValueError, "initial evidence cannot self-assert verification"):
+            InstitutionalCase(
+                "C", decision_owner="office",
+                required_evidence_ids={"E1"},
+                evidence={"E1": injected},
+                authorized_verifiers={"trusted-verifier"},
+            )
+
+    def test_untrusted_writer_cannot_self_assert_verification(self):
+        case = InstitutionalCase("C")
+        with self.assertRaises(ValueError):
+            case.add_evidence(Evidence("E1", "record", "user-supplied", verified=True))
+        case.add_evidence(Evidence("E1", "record", "user-supplied", submitted_by="submitter"))
+        with self.assertRaises(PermissionError):
+            case.verify_evidence("E1", verifier="untrusted-user")
+
+    def test_submitter_cannot_verify_own_evidence(self):
+        case = InstitutionalCase("C", decision_owner="office",
+            required_evidence_ids={"E1"}, authorized_verifiers={"submitter"})
+        case.add_evidence(Evidence("E1", "record", "official", submitted_by="submitter"))
+        with self.assertRaises(PermissionError):
+            case.verify_evidence("E1", verifier="submitter")
+
+    def test_constructor_detaches_and_freezes_public_state(self):
+        required = {"E1"}
+        dependencies = {"inspection"}
+        verifiers = {"trusted-verifier"}
+        evidence = {}
+        case = InstitutionalCase(
+            "C", decision_owner="office",
+            required_evidence_ids=required,
+            evidence=evidence,
+            blocking_dependencies=dependencies,
+            authorized_verifiers=verifiers,
+        )
+        required.clear()
+        dependencies.clear()
+        verifiers.clear()
+        evidence["E1"] = Evidence("E1", "record", "untrusted", submitted_by="writer")
+        self.assertEqual(case.required_evidence_ids, frozenset({"E1"}))
+        self.assertEqual(case.blocking_dependencies, frozenset({"inspection"}))
+        self.assertEqual(case.authorized_verifiers, frozenset({"trusted-verifier"}))
+        self.assertEqual(dict(case.evidence), {})
+        with self.assertRaises(TypeError):
+            case.evidence["E1"] = Evidence("E1", "record", "untrusted", submitted_by="writer")
+        with self.assertRaises(AttributeError):
+            case.blocking_dependencies = set()
+
+    def test_completion_flag_cannot_be_set_directly(self):
         case = InstitutionalCase("C", decision_owner="office")
-        case.complete = True
+        with self.assertRaises(AttributeError):
+            case._complete = True
+        self.assertNotEqual(case.status(), Status.COMPLETE)
+
+    def test_completed_case_rejects_direct_state_reassignment(self):
+        case = InstitutionalCase(
+            "C", decision_owner="office",
+            required_evidence_ids={"E1"},
+            authorized_verifiers={"verifier"},
+        )
+        case.add_evidence(Evidence("E1", "record", "official", submitted_by="submitter"))
+        case.verify_evidence("E1", verifier="verifier")
+        case.mark_complete(actor="office")
+        with self.assertRaises(AttributeError):
+            case.decision_owner = "attacker"
+        with self.assertRaises(AttributeError):
+            case._complete = False
+        with self.assertRaises(TypeError):
+            case.evidence["E2"] = Evidence("E2", "late", "official", submitted_by="writer")
         self.assertEqual(case.status(), Status.COMPLETE)
+
+    def test_completion_cannot_bypass_requirements(self):
+        case = InstitutionalCase("C", decision_owner="office",
+                                 required_evidence_ids={"E1"},
+                                 blocking_dependencies={"audit"})
+        with self.assertRaises(RuntimeError):
+            case.mark_complete(actor="office")
+        self.assertNotEqual(case.status(), Status.COMPLETE)
+
+    def test_only_decision_owner_can_complete_ready_case(self):
+        case = InstitutionalCase("C", decision_owner="office",
+                                 required_evidence_ids={"E1"},
+                                 authorized_verifiers={"verifier"})
+        case.add_evidence(Evidence("E1", "record", "official", submitted_by="submitter"))
+        case.verify_evidence("E1", verifier="verifier")
+        with self.assertRaises(PermissionError):
+            case.mark_complete(actor="other")
+        case.mark_complete(actor="office")
+        self.assertEqual(case.status(), Status.COMPLETE)
+        with self.assertRaises(RuntimeError):
+            case.add_evidence(Evidence("E2", "late record", "official"))
 
 
 if __name__ == "__main__":

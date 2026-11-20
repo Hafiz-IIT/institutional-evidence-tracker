@@ -7,16 +7,17 @@ from institutional_evidence_tracker import Evidence, InstitutionalCase
 class EvidencePacketTests(unittest.TestCase):
     def test_packet_hash_is_deterministic(self):
         case = InstitutionalCase("C", decision_owner="office", required_evidence_ids={"E1"})
-        case.add_evidence(Evidence("E1", "record", "official"))
+        case.add_evidence(Evidence("E1", "record", "official", submitted_by="submitter"))
         a = build_packet(case)
         b = build_packet(case)
         self.assertEqual(a["sha256"], b["sha256"])
 
     def test_verification_changes_packet_hash(self):
-        case = InstitutionalCase("C", decision_owner="office", required_evidence_ids={"E1"})
-        case.add_evidence(Evidence("E1", "record", "official"))
+        case = InstitutionalCase("C", decision_owner="office", required_evidence_ids={"E1"},
+                                 authorized_verifiers={"records-verifier"})
+        case.add_evidence(Evidence("E1", "record", "official", submitted_by="submitter"))
         before = build_packet(case)["sha256"]
-        case.verify_evidence("E1")
+        case.verify_evidence("E1", verifier="records-verifier")
         after = build_packet(case)["sha256"]
         self.assertNotEqual(before, after)
 
