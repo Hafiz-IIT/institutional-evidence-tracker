@@ -28,6 +28,19 @@ class InstitutionalTrackerTests(unittest.TestCase):
         case.verify_evidence("E1", verifier="records-office")
         self.assertEqual(case.status(), Status.READY)
 
+    def test_constructor_rejects_preverified_evidence_injection(self):
+        injected = Evidence(
+            "E1", "record", "user-supplied",
+            submitted_by="submitter", verified=True, verified_by="forged-verifier",
+        )
+        with self.assertRaisesRegex(ValueError, "initial evidence cannot self-assert verification"):
+            InstitutionalCase(
+                "C", decision_owner="office",
+                required_evidence_ids={"E1"},
+                evidence={"E1": injected},
+                authorized_verifiers={"trusted-verifier"},
+            )
+
     def test_untrusted_writer_cannot_self_assert_verification(self):
         case = InstitutionalCase("C")
         with self.assertRaises(ValueError):
