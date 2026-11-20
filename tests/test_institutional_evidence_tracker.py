@@ -81,6 +81,12 @@ class InstitutionalTrackerTests(unittest.TestCase):
         with self.assertRaises(AttributeError):
             case.blocking_dependencies = set()
 
+    def test_completion_flag_cannot_be_set_directly(self):
+        case = InstitutionalCase("C", decision_owner="office")
+        with self.assertRaises(AttributeError):
+            case._complete = True
+        self.assertNotEqual(case.status(), Status.COMPLETE)
+
     def test_completed_case_rejects_direct_state_reassignment(self):
         case = InstitutionalCase(
             "C", decision_owner="office",
