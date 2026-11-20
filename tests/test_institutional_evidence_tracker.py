@@ -23,7 +23,7 @@ class InstitutionalTrackerTests(unittest.TestCase):
         case = InstitutionalCase("C", decision_owner="office",
                                  required_evidence_ids={"E1"},
                                  authorized_verifiers={"records-office"})
-        case.add_evidence(Evidence("E1", "record", "official"))
+        case.add_evidence(Evidence("E1", "record", "official", submitted_by="submitter"))
         self.assertEqual(case.status(), Status.WAITING_EVIDENCE)
         case.verify_evidence("E1", verifier="records-office")
         self.assertEqual(case.status(), Status.READY)
@@ -32,9 +32,16 @@ class InstitutionalTrackerTests(unittest.TestCase):
         case = InstitutionalCase("C")
         with self.assertRaises(ValueError):
             case.add_evidence(Evidence("E1", "record", "user-supplied", verified=True))
-        case.add_evidence(Evidence("E1", "record", "user-supplied"))
+        case.add_evidence(Evidence("E1", "record", "user-supplied", submitted_by="submitter"))
         with self.assertRaises(PermissionError):
             case.verify_evidence("E1", verifier="untrusted-user")
+
+    def test_submitter_cannot_verify_own_evidence(self):
+        case = InstitutionalCase("C", decision_owner="office",
+            required_evidence_ids={"E1"}, authorized_verifiers={"submitter"})
+        case.add_evidence(Evidence("E1", "record", "official", submitted_by="submitter"))
+        with self.assertRaises(PermissionError):
+            case.verify_evidence("E1", verifier="submitter")
 
     def test_completion_cannot_bypass_requirements(self):
         case = InstitutionalCase("C", decision_owner="office",
@@ -48,7 +55,7 @@ class InstitutionalTrackerTests(unittest.TestCase):
         case = InstitutionalCase("C", decision_owner="office",
                                  required_evidence_ids={"E1"},
                                  authorized_verifiers={"verifier"})
-        case.add_evidence(Evidence("E1", "record", "official"))
+        case.add_evidence(Evidence("E1", "record", "official", submitted_by="submitter"))
         case.verify_evidence("E1", verifier="verifier")
         with self.assertRaises(PermissionError):
             case.mark_complete(actor="other")
