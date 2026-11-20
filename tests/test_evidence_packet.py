@@ -13,10 +13,11 @@ class EvidencePacketTests(unittest.TestCase):
         self.assertEqual(a["sha256"], b["sha256"])
 
     def test_verification_changes_packet_hash(self):
-        case = InstitutionalCase("C", decision_owner="office", required_evidence_ids={"E1"})
+        case = InstitutionalCase("C", decision_owner="office", required_evidence_ids={"E1"},
+                                 authorized_verifiers={"records-verifier"})
         case.add_evidence(Evidence("E1", "record", "official"))
         before = build_packet(case)["sha256"]
-        case.verify_evidence("E1")
+        case.verify_evidence("E1", verifier="records-verifier")
         after = build_packet(case)["sha256"]
         self.assertNotEqual(before, after)
 
