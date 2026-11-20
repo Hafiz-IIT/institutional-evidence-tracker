@@ -141,7 +141,7 @@ class InstitutionalCase:
         if dependency in self._blocking_dependencies:
             raise ValueError("duplicate blocking dependency")
         self._blocking_dependencies.add(dependency)
-        self.audit.append(f"dependency-added:{dependency}")
+        self._audit.append(f"dependency-added:{dependency}")
 
     def resolve_dependency(self, dependency: str, *, resolver: str) -> None:
         self._ensure_open()
