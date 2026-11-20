@@ -58,6 +58,8 @@ class InstitutionalCase:
             not isinstance(item, Evidence) or key != item.evidence_id for key, item in self.evidence.items()
         ):
             raise ValueError("evidence must map evidence IDs to Evidence records")
+        if any(item.verified or item.verified_by is not None for item in self.evidence.values()):
+            raise ValueError("initial evidence cannot self-assert verification; use verify_evidence() with an authorized verifier")
 
     @property
     def complete(self) -> bool:
