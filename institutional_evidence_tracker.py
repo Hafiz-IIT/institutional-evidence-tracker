@@ -55,7 +55,7 @@ class InstitutionalCase:
             if not isinstance(values, set) or any(not isinstance(v, str) or not v.strip() for v in values):
                 raise ValueError(f"{name} must be a set of non-empty strings")
         if not isinstance(self.evidence, dict) or any(
-            key != item.evidence_id or not isinstance(item, Evidence) for key, item in self.evidence.items()
+            not isinstance(item, Evidence) or key != item.evidence_id for key, item in self.evidence.items()
         ):
             raise ValueError("evidence must map evidence IDs to Evidence records")
 
