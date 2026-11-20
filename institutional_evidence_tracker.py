@@ -152,7 +152,7 @@ class InstitutionalCase:
         if dependency not in self._blocking_dependencies:
             raise KeyError(dependency)
         self._blocking_dependencies.remove(dependency)
-        self.audit.append(f"dependency-resolved:{dependency}:{resolver}")
+        self._audit.append(f"dependency-resolved:{dependency}:{resolver}")
 
     def status(self) -> Status:
         if self._complete: return Status.COMPLETE
