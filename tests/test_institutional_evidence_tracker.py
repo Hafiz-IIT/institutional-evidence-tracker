@@ -56,6 +56,48 @@ class InstitutionalTrackerTests(unittest.TestCase):
         with self.assertRaises(PermissionError):
             case.verify_evidence("E1", verifier="submitter")
 
+    def test_constructor_detaches_and_freezes_public_state(self):
+        required = {"E1"}
+        dependencies = {"inspection"}
+        verifiers = {"trusted-verifier"}
+        evidence = {}
+        case = InstitutionalCase(
+            "C", decision_owner="office",
+            required_evidence_ids=required,
+            evidence=evidence,
+            blocking_dependencies=dependencies,
+            authorized_verifiers=verifiers,
+        )
+        required.clear()
+        dependencies.clear()
+        verifiers.clear()
+        evidence["E1"] = Evidence("E1", "record", "untrusted", submitted_by="writer")
+        self.assertEqual(case.required_evidence_ids, frozenset({"E1"}))
+        self.assertEqual(case.blocking_dependencies, frozenset({"inspection"}))
+        self.assertEqual(case.authorized_verifiers, frozenset({"trusted-verifier"}))
+        self.assertEqual(dict(case.evidence), {})
+        with self.assertRaises(TypeError):
+            case.evidence["E1"] = Evidence("E1", "record", "untrusted", submitted_by="writer")
+        with self.assertRaises(AttributeError):
+            case.blocking_dependencies = set()
+
+    def test_completed_case_rejects_direct_state_reassignment(self):
+        case = InstitutionalCase(
+            "C", decision_owner="office",
+            required_evidence_ids={"E1"},
+            authorized_verifiers={"verifier"},
+        )
+        case.add_evidence(Evidence("E1", "record", "official", submitted_by="submitter"))
+        case.verify_evidence("E1", verifier="verifier")
+        case.mark_complete(actor="office")
+        with self.assertRaises(AttributeError):
+            case.decision_owner = "attacker"
+        with self.assertRaises(AttributeError):
+            case._complete = False
+        with self.assertRaises(TypeError):
+            case.evidence["E2"] = Evidence("E2", "late", "official", submitted_by="writer")
+        self.assertEqual(case.status(), Status.COMPLETE)
+
     def test_completion_cannot_bypass_requirements(self):
         case = InstitutionalCase("C", decision_owner="office",
                                  required_evidence_ids={"E1"},
