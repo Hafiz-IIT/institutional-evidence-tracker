@@ -54,7 +54,7 @@ class InstitutionalCase:
         if getattr(self, "_initialized", False) and name in {
             "case_id", "decision_owner", "required_evidence_ids", "evidence",
             "blocking_dependencies", "authorized_verifiers",
-            "authorized_dependency_resolvers", "audit",
+            "authorized_dependency_resolvers", "audit", "_complete",
         }:
             raise AttributeError("case state is managed through its public methods")
         if getattr(self, "_complete", False):
@@ -169,8 +169,8 @@ class InstitutionalCase:
             raise PermissionError("only the designated decision owner may complete the case")
         if self.status() != Status.READY:
             raise RuntimeError("case cannot complete until owner, dependencies, and required evidence are ready")
-        self._complete = True
         self._audit.append(f"case-completed:{actor}")
+        object.__setattr__(self, "_complete", True)
 
     def next_action(self) -> str:
         state = self.status()
