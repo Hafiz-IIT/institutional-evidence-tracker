@@ -25,7 +25,7 @@ class EvidencePacketTests(unittest.TestCase):
         case = InstitutionalCase("C", decision_owner="office", required_evidence_ids={"E1"})
         case.add_evidence(Evidence("E1", "record", "official"))
         case.verify_evidence("E1", verifier_id="reviewer", method="register-check", verified_at=100)
-        case.mark_complete(approved_by="office-head", decision_reference="DEC-1", completed_at=101)
+        case.mark_complete(approved_by="office", decision_reference="DEC-1", completed_at=101)
         packet = build_packet(case)
         self.assertEqual(packet["status"], "COMPLETE")
         self.assertEqual(packet["completion"]["decision_reference"], "DEC-1")

@@ -191,6 +191,8 @@ class InstitutionalCase:
     ) -> None:
         if self.status() != Status.READY:
             raise ValueError("case can be completed only when status is READY")
+        if approved_by != self._decision_owner:
+            raise ValueError("approved_by must match the assigned decision_owner")
         record = CompletionRecord(approved_by, decision_reference, completed_at)
         required_times = [
             self._evidence[evidence_id].verification.verified_at
