@@ -8,7 +8,7 @@
 - required-evidence tracking
 - blocking dependency tracking and explicit resolution
 - READY/COMPLETE distinction
-- completion requires an approval identity, decision reference and timestamp
+- completion requires the assigned decision owner, decision reference and timestamp
 - completion is invalidated when relevant case state changes
 - completion time cannot precede required evidence verification
 - deterministic evidence packet with verification and completion records
